@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	"../proto"
 )
@@ -20,11 +21,33 @@ const (
 	errCreatePost = "Can not create the post"
 )
 
+const (
+	host     = "localhost"
+	port     = "5432"
+	user     = "postgres"
+	password = "your-password"
+	dbname   = "Blog"
+)
+
 //databaseService default db used in blog service
 var databaseService *sql.DB
 
 //InitDB set the db
 func InitDB(db *sql.DB) {
+
+	dataSourceName := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable",
+		host, user, dbname)
+	db, err := sql.Open("postgres", dataSourceName)
+
+	if err != nil {
+		log.Fatalln("Could not Connect to Database: %s", err)
+		return
+	}
+
+	if err = db.Ping(); err != nil {
+		log.Fatalln("Could not Ping to Database: %s", err)
+		return
+	}
 	databaseService = db
 }
 
@@ -39,6 +62,5 @@ func CreatePost(ctx context.Context, post *proto.Post) error {
 	if err != nil {
 		return errors.New(errCreatePost)
 	}
-
 	return nil
 }
