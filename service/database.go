@@ -8,12 +8,7 @@ import (
 	"log"
 
 	"../proto"
-)
-
-//Databse Info
-const (
-	databaseName = "blog"
-	tableName    = "posts"
+	_ "github.com/lib/pq"
 )
 
 // Errors
@@ -21,22 +16,23 @@ const (
 	errCreatePost = "Can not create the post"
 )
 
+//Databse Info
 const (
 	host     = "localhost"
 	port     = "5432"
 	user     = "postgres"
-	password = "your-password"
-	dbname   = "Blog"
+	password = "password"
+	dbname   = "blog"
 )
 
 //databaseService default db used in blog service
 var databaseService *sql.DB
 
 //InitDB set the db
-func InitDB(db *sql.DB) {
+func InitDB() {
 
-	dataSourceName := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable",
-		host, user, dbname)
+	dataSourceName := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
+		host, user, password, dbname)
 	db, err := sql.Open("postgres", dataSourceName)
 
 	if err != nil {
@@ -53,13 +49,14 @@ func InitDB(db *sql.DB) {
 
 //CreatePost create a post in database
 func CreatePost(ctx context.Context, post *proto.Post) error {
-	dataIn := "(author, title, content, published)"
-	query := fmt.Sprintf("Insert INTO $1 $2", tableName, dataIn)
+	query := "Insert INTO posts (author, title, content, published)"
+	query += "VALUES ($1, $2, $3, $4)"
 
 	_, err := databaseService.ExecContext(ctx, query,
 		&post.Author, &post.Title, &post.Content, &post.Published)
 
 	if err != nil {
+		log.Println(err)
 		return errors.New(errCreatePost)
 	}
 	return nil
