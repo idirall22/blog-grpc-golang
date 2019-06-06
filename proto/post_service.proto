@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package proto;
+
+// Post model
+message Post{
+  uint64 id = 1;
+  uint64 author = 2;
+  string title = 3;
+  string content = 4;
+  string timestemp = 5;
+  bool published = 6;
+  repeated Comments comments = 7;
+}
+
+//Posts model
+message Posts{
+  repeated Post posts = 1;
+}
+
+//comment model
+message Comments{
+  uint64 author = 1;
+  string content = 2;
+  string timestemp = 3;
+}
+
+//Posts serch by page num and by title
+message PostsSearch{
+  uint32 page = 1;
+  string title = 2;
+}
+
+//Response post with data
+message ResponsePost{
+  uint32 statusCode = 1;
+  string message = 2;
+  Post post = 3;
+}
+
+//Request Post by ID
+message RequestPost{
+  uint64 postID = 1;
+}
+
+//Blog services
+service BlogServices{
+  
+  //get single post
+  rpc getPost(RequestPost) returns (ResponsePost);
+
+  //get list of posts
+  rpc getPosts(PostsSearch) returns (Posts);
+
+  //create a post
+  rpc createPost(Post) returns (ResponsePost);
+
+  //update a post
+  rpc updatePost(Post) returns (ResponsePost);
+
+  //delete a post
+  rpc deletePost(RequestPost) returns (ResponsePost);
+}
