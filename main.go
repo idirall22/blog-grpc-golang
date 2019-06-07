@@ -10,8 +10,10 @@ import (
 func main() {
 	service.InitDB()
 
-	post := &proto.Post{Title: "post1", Author: 1,
-		Content: "content01", Published: false}
-	service.CreatePost(context.Background(), post)
+	post := &proto.Post{Id: 1, Title: "edited post1", Author: 1,
+		Content: "edited content01", Published: true}
+	// service.CreatePost(context.Background(), post)
+
+	service.UpdatePost(context.Background(), post)
 
 }

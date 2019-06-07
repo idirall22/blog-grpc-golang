@@ -13,10 +13,12 @@ import (
 
 // Errors
 const (
-	errCreatePost = "Can not create the post"
-)
+	errCreatePost   = "Can not create the post"
+	errUpdatePost   = "Can not update the post"
+	errPostNotExist = "Post does not exist"
 
 //Databse Info
+)
 const (
 	host     = "localhost"
 	port     = "5432"
@@ -47,8 +49,8 @@ func InitDB() {
 	databaseService = db
 }
 
-//CreatePost create a post in database
-func CreatePost(ctx context.Context, post *proto.Post) error {
+//createPost create a post in database
+func createPost(ctx context.Context, post *proto.Post) error {
 	query := "Insert INTO posts (author, title, content, published)"
 	query += "VALUES ($1, $2, $3, $4)"
 
@@ -59,5 +61,24 @@ func CreatePost(ctx context.Context, post *proto.Post) error {
 		log.Println(err)
 		return errors.New(errCreatePost)
 	}
+	return nil
+}
+
+//UpdatePost update a post in database
+func UpdatePost(ctx context.Context, post *proto.Post) error {
+
+	tx, err := databaseService.Begin()
+	if err != nil {
+		return errors.New(errUpdatePost)
+	}
+
+	queryUpdate := "UPDATE posts SET title=$1, content=$2, published=$3 WHERE id=$4"
+	_, errP := tx.ExecContext(ctx, queryUpdate,
+		&post.Title, &post.Content, &post.Published, &post.Id)
+
+	if errP != nil {
+		log.Fatal(errP)
+	}
+	tx.Commit()
 	return nil
 }
