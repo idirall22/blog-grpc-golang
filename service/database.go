@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -51,8 +52,24 @@ func InitDB() {
 	databaseService = db
 }
 
-//createPost create a post in database
-func createPost(ctx context.Context, post *proto.Post) error {
+//GetSinglePost create a post in database
+func GetSinglePost(ctx context.Context, postID int) (*proto.Post, error) {
+	query := "SELECT * FROM posts WHERE id=$1"
+	post := &proto.Post{}
+	var comments []uint8
+	if err := databaseService.QueryRowContext(ctx, query, postID).
+		Scan(&post.Id, &post.Author, &post.Title, &post.Content,
+			&post.Timestemp, &post.Published, &comments); err != nil {
+
+		fmt.Println(err)
+		return nil, sql.ErrNoRows
+	}
+	json.Unmarshal(comments, &post.Comments)
+	return post, nil
+}
+
+//CreatePost create a post in database
+func CreatePost(ctx context.Context, post *proto.Post) error {
 	query := "Insert INTO posts (author, title, content, published)"
 	query += "VALUES ($1, $2, $3, $4)"
 
@@ -90,8 +107,6 @@ func DeletePost(ctx context.Context, postID int) error {
 	tx, errTX := databaseService.Begin()
 
 	if errTX != nil {
-		print("1")
-		print(errTX)
 		return errors.New(errBeginTX)
 	}
 
