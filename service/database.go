@@ -13,9 +13,11 @@ import (
 
 // Errors
 const (
-	errCreatePost   = "Can not create the post"
-	errUpdatePost   = "Can not update the post"
-	errPostNotExist = "Post does not exist"
+	errBeginTX    = "Can not begin a transaction"
+	errCommitTX   = "Can not commit a transaction"
+	errCreatePost = "Can not create the post"
+	errUpdatePost = "Can not update the post"
+	errDeletePost = "Can not delete the post"
 
 //Databse Info
 )
@@ -69,7 +71,7 @@ func UpdatePost(ctx context.Context, post *proto.Post) error {
 
 	tx, err := databaseService.Begin()
 	if err != nil {
-		return errors.New(errUpdatePost)
+		return errors.New(errBeginTX)
 	}
 
 	queryUpdate := "UPDATE posts SET title=$1, content=$2, published=$3 WHERE id=$4"
@@ -80,5 +82,29 @@ func UpdatePost(ctx context.Context, post *proto.Post) error {
 		log.Fatal(errP)
 	}
 	tx.Commit()
+	return nil
+}
+
+// DeletePost delete apost in database
+func DeletePost(ctx context.Context, postID int) error {
+	tx, errTX := databaseService.Begin()
+
+	if errTX != nil {
+		print("1")
+		print(errTX)
+		return errors.New(errBeginTX)
+	}
+
+	queryDelete := "DELETE FROM posts WHERE id=$1"
+	_, errD := tx.ExecContext(ctx, queryDelete, postID)
+
+	if errD != nil {
+		print("2")
+		print(errD)
+		return errors.New(errDeletePost)
+	}
+	if errTX = tx.Commit(); errTX != nil {
+		return errors.New(errCommitTX)
+	}
 	return nil
 }

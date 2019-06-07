@@ -14,6 +14,6 @@ func main() {
 		Content: "edited content01", Published: true}
 	// service.CreatePost(context.Background(), post)
 
-	service.UpdatePost(context.Background(), post)
+	service.DeletePost(context.Background(), int(post.Id))
 
 }
