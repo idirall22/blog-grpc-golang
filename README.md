@@ -1,1 +1,1 @@
-Blog service
+Blog GRPC service using golang
