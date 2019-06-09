@@ -1,1 +1,1 @@
-Blog GRPC service using golang
+Blog GRPC service using golang and postgresql as database
