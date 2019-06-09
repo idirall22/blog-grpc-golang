@@ -1,20 +1,24 @@
 package main
 
 import (
-	"context"
-	"fmt"
+	"log"
+	"net"
 
+	"./proto"
 	"./service"
+	"google.golang.org/grpc"
 )
 
 func main() {
+	listner, err := net.Listen("tcp", "localhost:8000")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	server := grpc.NewServer()
+	proto.RegisterBlogServicesServer(server, &service.BlogService{})
 	service.InitDB()
-
-	// post := &proto.Post{Title: "post1", Author: 1,
-	// 	Content: "content01", Published: false}
-	// service.CreatePost(context.Background(), post)
-	p, _ := service.GetSinglePost(context.Background(), 2)
-	fmt.Println(p.Comments)
-	// service.DeletePost(context.Background(), int(post.Id))
-
+	if errS := server.Serve(listner); errS != nil {
+		log.Fatal(errS)
+	}
 }

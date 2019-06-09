@@ -19,6 +19,8 @@ const (
 	errCreatePost = "Can not create the post"
 	errUpdatePost = "Can not update the post"
 	errDeletePost = "Can not delete the post"
+	errScanPost   = "Can not Scan the post"
+	errUnMarshal  = "Can not unmarshal the row"
 
 //Databse Info
 )
@@ -52,7 +54,43 @@ func InitDB() {
 	databaseService = db
 }
 
-//GetSinglePost create a post in database
+//GetPosts get a list of posts from database by limit index
+func GetPosts(ctx context.Context, limitPosts, page int) ([]*proto.Post, error) {
+	if limitPosts < 10 {
+		limitPosts = 10
+	}
+	if page < 1 {
+		page = 1
+	}
+	limit := limitPosts
+	offset := limit*page - limit
+	query := "SELECT * FROM posts LIMIT $1 OFFSET $2"
+
+	rows, err := databaseService.QueryContext(ctx, query, limit, offset)
+	if err != nil {
+		return nil, sql.ErrNoRows
+	}
+	defer rows.Close()
+
+	var posts []*proto.Post
+	if errR := rows.Next(); errR {
+		var comments []uint8
+		var post proto.Post
+		if err := rows.Scan(&post.Id, &post.Author, &post.Title,
+			&post.Content, &post.Timestemp, &post.Published,
+			&comments); err != nil {
+			fmt.Println(err)
+			return nil, errors.New(errScanPost)
+		}
+		if errM := json.Unmarshal(comments, &post.Comments); errM != nil {
+			return nil, errors.New(errUnMarshal)
+		}
+		posts = append(posts, &post)
+	}
+	return posts, nil
+}
+
+//GetSinglePost get a post from database
 func GetSinglePost(ctx context.Context, postID int) (*proto.Post, error) {
 	query := "SELECT * FROM posts WHERE id=$1"
 	post := &proto.Post{}
@@ -68,8 +106,8 @@ func GetSinglePost(ctx context.Context, postID int) (*proto.Post, error) {
 	return post, nil
 }
 
-//CreatePost create a post in database
-func CreatePost(ctx context.Context, post *proto.Post) error {
+//CreatePostDB create a post in database
+func CreatePostDB(ctx context.Context, post *proto.Post) error {
 	query := "Insert INTO posts (author, title, content, published)"
 	query += "VALUES ($1, $2, $3, $4)"
 
